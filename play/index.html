@@ -1,28 +1,277 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Opening DeadFy...</title>
   <style>
-    body { background: #0f0e17; color: #c9b1ff; font-family: sans-serif;
-           display: flex; align-items: center; justify-content: center;
-           height: 100vh; margin: 0; flex-direction: column; gap: 12px; }
-    p { opacity: 0.7; font-size: 14px; }
-    a { color: #c9b1ff; font-size: 12px; opacity: 0.5; margin-top: 16px; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #0a0f0a;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Subtle animated background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 60% 50% at 20% 50%, #1db95415 0%, transparent 70%),
+        radial-gradient(ellipse 40% 60% at 80% 30%, #0f4a0f10 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .card {
+      position: relative;
+      background: #111811;
+      border: 1px solid #1e2e1e;
+      border-radius: 20px;
+      padding: 48px 52px;
+      max-width: 440px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 32px 80px #00000088;
+    }
+
+    /* Logo */
+    .logo {
+      width: 72px;
+      height: 72px;
+      background: linear-gradient(135deg, #1db954, #0f8a38);
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+      font-size: 32px;
+      box-shadow: 0 8px 32px #1db95440;
+    }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: #fff;
+    }
+
+    /* Track info (shown when resolved) */
+    .track {
+      display: none;
+      align-items: center;
+      gap: 12px;
+      background: #172017;
+      border: 1px solid #1e2e1e;
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin: 20px 0;
+      text-align: left;
+    }
+    .track.visible { display: flex; }
+
+    .track-thumb {
+      width: 46px;
+      height: 46px;
+      border-radius: 8px;
+      object-fit: cover;
+      background: #1e2e1e;
+      flex-shrink: 0;
+    }
+
+    .track-info { flex: 1; min-width: 0; }
+    .track-title {
+      font-size: 13.5px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: #fff;
+    }
+    .track-artist {
+      font-size: 12px;
+      color: #888;
+      margin-top: 3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Status line */
+    .status {
+      font-size: 14px;
+      color: #888;
+      margin: 18px 0 0;
+      min-height: 20px;
+      transition: color 0.3s;
+    }
+    .status.green  { color: #1db954; }
+    .status.orange { color: #ff9900; }
+
+    /* Animated dots */
+    .dots::after {
+      content: '';
+      animation: dots 1.4s steps(4, end) infinite;
+    }
+    @keyframes dots {
+      0%   { content: '';    }
+      25%  { content: '.';   }
+      50%  { content: '..';  }
+      75%  { content: '...'; }
+    }
+
+    /* Download link */
+    .dl {
+      display: inline-block;
+      margin-top: 28px;
+      font-size: 12px;
+      color: #444;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .dl:hover { color: #1db954; }
+
+    /* Source badge */
+    .badge {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 5px;
+      margin-left: 6px;
+      vertical-align: middle;
+    }
+    .badge-yt { background: #ff0000; color: #fff; }
+    .badge-sc { background: #ff5500; color: #fff; }
+    .badge-df { background: #1db954; color: #0a0f0a; }
   </style>
 </head>
 <body>
-  <h2>🎵 Opening DeadFy...</h2>
-  <p id="msg">Launching the app</p>
-  <a href="https://github.com/Takanajson/DeadFy/releases/latest">
-    Don't have DeadFy? Download it
-  </a>
-  <script>
-    window.location = "deadfy://play" + window.location.search;
-    setTimeout(() => {
-      document.getElementById("msg").textContent =
-        "If nothing happened, make sure DeadFy is installed and opened at least once.";
-    }, 2000);
-  </script>
+<div class="card">
+  <div class="logo">🎵</div>
+  <h1>Opening DeadFy<span id="badge-container"></span></h1>
+
+  <div class="track" id="trackCard">
+    <img class="track-thumb" id="trackThumb" src="" alt="">
+    <div class="track-info">
+      <div class="track-title" id="trackTitle">Loading...</div>
+      <div class="track-artist" id="trackArtist"></div>
+    </div>
+  </div>
+
+  <p class="status dots" id="status">Launching the app</p>
+
+  <a class="dl" href="https://github.com/Takanajson/DeadFy/releases/latest"
+     id="dlLink">Don't have DeadFy? Download it</a>
+</div>
+
+<script>
+  const params  = new URLSearchParams(window.location.search);
+  const status  = document.getElementById('status');
+  const dlLink  = document.getElementById('dlLink');
+  const trackCard   = document.getElementById('trackCard');
+  const trackThumb  = document.getElementById('trackThumb');
+  const trackTitle  = document.getElementById('trackTitle');
+  const trackArtist = document.getElementById('trackArtist');
+  const badgeCont   = document.getElementById('badge-container');
+
+  // ── Detect source and build deep link ─────────────────────────────────────
+  const url    = params.get('url');
+  const ytid   = params.get('ytid');
+  const songId = params.get('id');
+
+  let deepLink = 'deadfy://play' + window.location.search;
+  let source   = 'deadfy';
+
+  if (url) {
+    if (url.includes('youtube.com') || url.includes('youtu.be') || url.includes('googlevideo.com'))
+      source = 'youtube';
+    else if (url.includes('sndcdn.com') || url.includes('soundcloud.com'))
+      source = 'soundcloud';
+  } else if (ytid) {
+    source = 'youtube';
+  }
+
+  // ── Source badge ──────────────────────────────────────────────────────────
+  if (source === 'youtube') {
+    badgeCont.innerHTML = ' <span class="badge badge-yt">YT</span>';
+  } else if (source === 'soundcloud') {
+    badgeCont.innerHTML = ' <span class="badge badge-sc">SC</span>';
+  }
+
+  // ── Show track preview ────────────────────────────────────────────────────
+  async function tryShowTrack() {
+    // YouTube: show thumbnail and try to get title via oEmbed (no API key needed)
+    if (ytid || (url && source === 'youtube')) {
+      const videoId = ytid || extractYtId(url);
+      if (videoId) {
+        trackThumb.src = `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
+        trackThumb.onerror = () => { trackThumb.style.display = 'none'; };
+        trackCard.classList.add('visible');
+
+        try {
+          const r = await fetch(`https://www.youtube.com/oembed?url=https://youtu.be/${videoId}&format=json`);
+          if (r.ok) {
+            const d = await r.json();
+            trackTitle.textContent  = d.title        || 'YouTube Track';
+            trackArtist.textContent = d.author_name  || 'YouTube';
+          }
+        } catch { trackTitle.textContent = 'YouTube Track'; }
+      }
+    }
+
+    // SoundCloud: show via oEmbed
+    if (source === 'soundcloud' && url) {
+      trackCard.classList.add('visible');
+      trackThumb.style.display = 'none';
+      trackTitle.textContent   = 'SoundCloud Track';
+      trackArtist.textContent  = '';
+      try {
+        const r = await fetch(`https://soundcloud.com/oembed?url=${encodeURIComponent(url)}&format=json`);
+        if (r.ok) {
+          const d = await r.json();
+          // title is usually "Song by Artist"
+          const parts = (d.title || '').split(' by ');
+          trackTitle.textContent  = parts[0] || d.title || 'SoundCloud Track';
+          trackArtist.textContent = parts[1] || d.author_name || '';
+          if (d.thumbnail_url) {
+            trackThumb.src = d.thumbnail_url;
+            trackThumb.style.display = '';
+          }
+        }
+      } catch {}
+    }
+  }
+
+  function extractYtId(u) {
+    if (!u) return null;
+    try {
+      const parsed = new URL(u);
+      if (parsed.hostname.includes('youtu.be'))
+        return parsed.pathname.slice(1);
+      return parsed.searchParams.get('v');
+    } catch { return null; }
+  }
+
+  // ── Launch deep link ──────────────────────────────────────────────────────
+  window.location = deepLink;
+
+  // Run track preview fetch in parallel (non-blocking)
+  tryShowTrack().catch(() => {});
+
+  // ── Fallback message after 2.5s ───────────────────────────────────────────
+  setTimeout(() => {
+    status.classList.remove('dots');
+    status.classList.add('orange');
+    status.textContent = 'If nothing happened — make sure DeadFy is installed and has been opened at least once.';
+    dlLink.style.color = '#1db954';
+  }, 2500);
+</script>
 </body>
 </html>
